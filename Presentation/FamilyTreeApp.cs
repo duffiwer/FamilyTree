@@ -25,8 +25,15 @@ namespace Presentation
                 var choice = AnsiConsole.Prompt(
                     new SelectionPrompt<string>()
                         .Title("[yellow]Выберите действие:[/]")
-                        .AddChoices("Добавить человека", "Установить отношения", "Показать ближайших родственников", "Показать дерево", "Очистить дерево", "Сохранить дерево", "Выйти"));
-
+                        .AddChoices(
+                            "Добавить человека",
+                            "Установить отношения",
+                            "Показать ближайших родственников",
+                            "Показать дерево",
+                            "Вычислить возраст предка при рождении потомка", 
+                            "Очистить дерево",
+                            "Сохранить дерево",
+                            "Выйти"));
                 switch (choice)
                 {
                     case "Добавить человека":
@@ -40,6 +47,9 @@ namespace Presentation
                         break;
                     case "Показать дерево":
                         ShowTree();
+                        break;
+                    case "Вычислить возраст предка при рождении потомка": 
+                        CalculateAgeAtBirth();
                         break;
                     case "Очистить дерево":
                         ClearTree();
@@ -66,6 +76,21 @@ namespace Presentation
             var person = new Person(name, dob, gender); 
             _service.AddPerson(person);
             AnsiConsole.MarkupLine($"[green]Человек добавлен успешно! Short ID: {person.ShortId}[/]");
+        }
+        private void CalculateAgeAtBirth()
+        {
+            var parentId = AnsiConsole.Ask<string>("Введите Short ID предка:");
+            var childId = AnsiConsole.Ask<string>("Введите Short ID потомка:");
+
+            try
+            {
+                var age = _service.CalculateAgeAtBirth(parentId, childId);
+                AnsiConsole.MarkupLine($"[green]Возраст предка при рождении потомка: {age} лет.[/]");
+            }
+            catch (Exception ex)
+            {
+                AnsiConsole.MarkupLine($"[red]{ex.Message}[/]");
+            }
         }
 
         private void AddRelation()

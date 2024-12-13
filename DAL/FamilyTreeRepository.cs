@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 public class FamilyTreeRepository
 {
-    private readonly List<Person> _people = new();
+    private readonly List<Person> _people = new(); 
 
     public void AddPerson(Person person) => _people.Add(person);
 
@@ -26,13 +26,11 @@ public class FamilyTreeRepository
 
         var settings = new JsonSerializerSettings
         {
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore 
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
         };
-
 
         var json = JsonConvert.SerializeObject(_people, settings);
         File.WriteAllText(filePath, json);
-       
     }
 
     public void LoadTree(string filePath)
@@ -41,12 +39,33 @@ public class FamilyTreeRepository
         {
             var settings = new JsonSerializerSettings
             {
-                PreserveReferencesHandling = PreserveReferencesHandling.Objects
+                PreserveReferencesHandling = PreserveReferencesHandling.Objects,
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
             };
 
             var json = File.ReadAllText(filePath);
             var people = JsonConvert.DeserializeObject<List<Person>>(json, settings);
-            if (people != null) _people.AddRange(people);
+
+            if (people != null)
+            {
+                _people.Clear();
+                _people.AddRange(people);
+
+                foreach (var person in _people)
+                {
+                    person.Parents = person.ParentsIds
+                        .Select(id => _people.FirstOrDefault(p => p.Id == id))
+                        .Where(p => p != null)
+                        .ToList();
+
+                    person.Children = person.ChildrenIds
+                        .Select(id => _people.FirstOrDefault(p => p.Id == id))
+                        .Where(c => c != null)
+                        .ToList();
+
+                    person.Spouse = _people.FirstOrDefault(p => p.Id == person.SpouseId);
+                }
+            }
         }
     }
 }

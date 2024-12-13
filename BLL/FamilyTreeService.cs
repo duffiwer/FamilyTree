@@ -31,7 +31,6 @@ namespace BLL
                     if (!person1.Children.Contains(person2)) person1.Children.Add(person2);
                     if (!person2.Parents.Contains(person1)) person2.Parents.Add(person1);
                     break;
-                
 
                 case "партнер":
                     if (person1.Spouse != null || person2.Spouse != null)
@@ -40,19 +39,18 @@ namespace BLL
                     person2.Spouse = person1;
                     break;
 
+                default:
+                    throw new Exception("Неизвестный тип отношений.");
             }
         }
-
 
         public List<Person> GetClosestRelatives(string shortId)
         {
             var person = _repository.FindPersonByShortId(shortId);
-            if (person == null) throw new Exception("Человек не найден");
+            if (person == null) throw new Exception("Человек не найден.");
 
-            var relatives = person.Parents.Concat(person.Children).ToList();
-            return relatives;
+            return person.Parents.Concat(person.Children).ToList();
         }
-
 
         public void ClearTree() => _repository.ClearTree();
 
@@ -64,59 +62,52 @@ namespace BLL
             var result = new StringBuilder();
             foreach (var person in people)
             {
-                result.AppendLine($"  {person.ShortId} - {person.FullName} ({person.DateOfBirth:yyyy-MM-dd}, {person.Gender})");
+                result.AppendLine($"{person.ShortId} - {person.FullName} ({person.DateOfBirth:yyyy-MM-dd}, {person.Gender})");
 
-                if (person.Parents != null && person.Parents.Any())
+                if (person.Parents.Any())
                 {
-                    result.AppendLine("    Родители:");
+                    result.AppendLine("  Родители:");
                     foreach (var parent in person.Parents)
                     {
-
-                        if (parent != null)
-                        {
-                            result.AppendLine($"      {parent.ShortId} - {parent.FullName} ({parent.DateOfBirth:yyyy-MM-dd}, {parent.Gender})");
-                        }
-                        else
-                        {
-                            result.AppendLine("      [Ошибка: Данные о родителях отсутствуют]");
-                        }
+                        result.AppendLine($"    {parent.ShortId} - {parent.FullName} ({parent.DateOfBirth:yyyy-MM-dd}, {parent.Gender})");
                     }
                 }
 
-                if (person.Children != null && person.Children.Any())
+                if (person.Children.Any())
                 {
-                    result.AppendLine("    Дети:");
+                    result.AppendLine("  Дети:");
                     foreach (var child in person.Children)
                     {
-                        if (child != null)
-                        {
-                            result.AppendLine($"      {child.ShortId} - {child.FullName} ({child.DateOfBirth:yyyy-MM-dd}, {child.Gender})");
-                        }
-                        else
-                        {
-                            result.AppendLine("      [Ошибка: Данные о ребенке отсутствуют]");
-                        }
+                        result.AppendLine($"    {child.ShortId} - {child.FullName} ({child.DateOfBirth:yyyy-MM-dd}, {child.Gender})");
                     }
                 }
 
                 if (person.Spouse != null)
                 {
-                    result.AppendLine("    Партнёр:");
-                    result.AppendLine($"      {person.Spouse.ShortId} - {person.Spouse.FullName} ({person.Spouse.DateOfBirth:yyyy-MM-dd}, {person.Spouse.Gender})");
+                    result.AppendLine("  Партнёр:");
+                    result.AppendLine($"    {person.Spouse.ShortId} - {person.Spouse.FullName} ({person.Spouse.DateOfBirth:yyyy-MM-dd}, {person.Spouse.Gender})");
                 }
             }
 
             return result.ToString();
         }
 
-
         public int CalculateAgeAtBirth(string parentId, string childId)
         {
             var parent = _repository.FindPersonByShortId(parentId);
             var child = _repository.FindPersonByShortId(childId);
-            if (parent == null || child == null) throw new Exception("Человек не найден");
 
-            return child.DateOfBirth.Year - parent.DateOfBirth.Year;
+            if (parent == null || child == null)
+                throw new Exception("Человек не найден.");
+
+            int age = child.DateOfBirth.Year - parent.DateOfBirth.Year;
+
+            if (child.DateOfBirth < parent.DateOfBirth.AddYears(age))
+            {
+                age--;
+            }
+
+            return age;
         }
 
         public void SaveTree(string filePath)
