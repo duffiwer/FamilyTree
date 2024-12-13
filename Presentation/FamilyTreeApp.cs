@@ -4,11 +4,13 @@ using DAL.Models;
 using Microsoft.Extensions.Configuration;
 
 namespace Presentation
+
 {
     public class FamilyTreeApp
     {
         private readonly FamilyTreeService _service;
         private readonly string _filePath;
+        private static bool isTreeVisualizationOpen = false;
 
         public FamilyTreeApp(FamilyTreeService service, IConfiguration configuration)
         {
@@ -19,6 +21,7 @@ namespace Presentation
         public void Run()
         {
             _service.LoadTree(_filePath);
+
             while (true)
             {
                 AnsiConsole.Write(new Rule("Генеалогическое древо").RuleStyle("green"));
@@ -29,11 +32,13 @@ namespace Presentation
                             "Добавить человека",
                             "Установить отношения",
                             "Показать ближайших родственников",
-                            "Показать дерево",
-                            "Вычислить возраст предка при рождении потомка", 
+                            "Вывести дерево текстом",
+                            "Показать схему дерева",
+                            "Вычислить возраст предка при рождении потомка",
                             "Очистить дерево",
                             "Сохранить дерево",
                             "Выйти"));
+
                 switch (choice)
                 {
                     case "Добавить человека":
@@ -45,11 +50,14 @@ namespace Presentation
                     case "Показать ближайших родственников":
                         ShowClosestRelatives();
                         break;
-                    case "Показать дерево":
+                    case "Вычислить возраст предка при рождении потомка":
+                        CalculateAgeAtBirth();
+                        break;
+                    case "Вывести дерево текстом":
                         ShowTree();
                         break;
-                    case "Вычислить возраст предка при рождении потомка": 
-                        CalculateAgeAtBirth();
+                    case "Показать схему дерева":
+                        ShowTreeVisualization();
                         break;
                     case "Очистить дерево":
                         ClearTree();
@@ -77,6 +85,7 @@ namespace Presentation
             _service.AddPerson(person);
             AnsiConsole.MarkupLine($"[green]Человек добавлен успешно! Short ID: {person.ShortId}[/]");
         }
+
         private void CalculateAgeAtBirth()
         {
             var parentId = AnsiConsole.Ask<string>("Введите Short ID предка:");
@@ -156,6 +165,36 @@ namespace Presentation
                 AnsiConsole.MarkupLine($"[red]{ex.Message}[/]");
             }
         }
+
+        private void ShowTreeVisualization()
+        {
+            isTreeVisualizationOpen = true;
+
+            try
+            {
+                System.Windows.Forms.Application.EnableVisualStyles();
+                System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
+
+                var form = new WinFormsTree.TreeVisualizationForm(_service);
+                form.FormClosed += (sender, args) =>
+                {
+                    isTreeVisualizationOpen = false;
+                };
+
+                System.Windows.Forms.Application.Run(form); 
+            }
+            catch (Exception ex)
+            {
+                isTreeVisualizationOpen = false;
+                System.Windows.Forms.MessageBox.Show(
+                    $"Перезапустите код для повторного построения дерева! При необходимости сохраните данные.",
+                    "Ошибка",
+                    System.Windows.Forms.MessageBoxButtons.OK,
+                    System.Windows.Forms.MessageBoxIcon.Error
+                );
+            }
+        }
+
 
         private void ShowTree()
         {

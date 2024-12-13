@@ -17,6 +17,12 @@ namespace BLL
             _repository.AddPerson(person);
         }
 
+        public List<Person> GetAllPeople()
+        {
+            return _repository.GetAllPeople();
+        }
+
+
         public void AddRelation(string shortId1, string shortId2, string relationType)
         {
             var person1 = _repository.FindPersonByShortId(shortId1);
@@ -44,6 +50,7 @@ namespace BLL
             }
         }
 
+
         public List<Person> GetClosestRelatives(string shortId)
         {
             var person = _repository.FindPersonByShortId(shortId);
@@ -52,7 +59,9 @@ namespace BLL
             return person.Parents.Concat(person.Children).ToList();
         }
 
+
         public void ClearTree() => _repository.ClearTree();
+
 
         public string GetFamilyTreeAsText()
         {
@@ -92,6 +101,8 @@ namespace BLL
             return result.ToString();
         }
 
+
+
         public int CalculateAgeAtBirth(string parentId, string childId)
         {
             var parent = _repository.FindPersonByShortId(parentId);
@@ -110,10 +121,14 @@ namespace BLL
             return age;
         }
 
+
+
         public void SaveTree(string filePath)
         {
             _repository.SaveTree(filePath);
         }
+
+
 
         public void LoadTree(string filePath)
         {
