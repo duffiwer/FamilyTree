@@ -50,12 +50,6 @@ namespace BLL
             if (person == null) throw new Exception("Человек не найден");
 
             var relatives = person.Parents.Concat(person.Children).ToList();
-
-            if (person.Spouse != null)
-            {
-                relatives.Add(person.Spouse);
-            }
-
             return relatives;
         }
 
